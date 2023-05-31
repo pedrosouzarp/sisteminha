@@ -1,1 +1,1 @@
-python -m flask --app init.py run --debug --reload
+python -m flask --app app.py run --debug --reload

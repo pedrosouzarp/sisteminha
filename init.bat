@@ -1,1 +1,1 @@
-python -m flask --app init.py run
+python -m flask --app app.py run
