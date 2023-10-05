@@ -37,7 +37,7 @@
                     <form id="formulario">
                         <div class="input-group mb-3">
                             <label class="input-group-text" for="perfil">
-                                Serviços
+                               TIpo de Serviços
                             </label>
                             <select class="form-select" id="perfil">
                                 <option selected>Escolher...</option>
@@ -63,16 +63,29 @@
                                 aria-describedby="whatsapp" id="whatsapp">
                         </div>
                         <div class="input-group mb-3">
-                            <label class="input-group-text" for="periodo">
-                                Período de Serviço
+                            <label class="input-group-text" for="km">
+                                KM Estimado por mês
                             </label>
+                            <select class="form-select" id="km">
+                                <option selected>Escolher...</option>
+                                <option value="1">Menos que 1.000km</option>
+                                <option value="2">de 1.000 a 3000km</option>
+                                <option value="3">de 3.000 a 5000km</option>
+                                <option value="4">de 5.000 a 10.000km</option>
+                                <option value="5">acima de 10.000km</option>
+                            </select>
+                            </div>
+                            <div class="inputgroup mb-3">
+                                <label class="input-group-text" for="periodo">
+                                    Período de Servico
+                                </label>
                             <select class="form-select" id="periodo">
                                 <option selected>Escolher...</option>
-                                <option value="1">7 dias</option>
-                                <option value="2">14 dias</option>
-                                <option value="3">21 dias</option>
-                                <option value="4">28 dias</option>
-                                <option value="5">35 dias</option>
+                                <option value="1">1 mês</option>
+                                <option value="2">2 meses</option>
+                                <option value="3">3 meses</option>
+                                <option value="4">6 meses</option>
+                                <option value="5">12 meses</option>
                             </select>
                         </div>
                         <div class="d-grid gap-2">
