@@ -1,19 +1,24 @@
+import sqlite3
 from flask import Flask, request, json, jsonify, render_template, session, g
-from conexao_bd import create_connection
 
-
+DATABASE = './database/banco.sqlite'
 app = Flask(__name__, static_url_path='/static')
-app.config.update(SECRET_KEY='senhadoapp')
+app.config.update(SECRET_KEY = 'senhadoapp')
+
 
 def get_db():
-    db = getattr(g, '_database', None)
+    db=getattr(g, '_database', None)
     if db is None:
-        db = g._database = create_connection()
+        db=g._database=sqlite3.connect(DATABASE)
     return db
 
-@app.teardown_appcontext
+
+@ app.teardown_appcontext
 def close_connection(exception):
-    close_connection(getattr(g, '_database', None))
+    db=getattr(g, '_database', None)
+    if db is not None:
+        db.close()
+
 
 @ app.route('/')
 def hello_world():
@@ -241,5 +246,3 @@ def total():
             status=400
         )
 
-if __name__ == "__main__":
-    app.run(debug=True)
