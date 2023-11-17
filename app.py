@@ -1,7 +1,6 @@
 from flask import Flask, request, json, jsonify, render_template, session, g
 from conexao_bd import create_connection
 
-
 app = Flask(__name__, static_url_path='/static')
 app.config.update(SECRET_KEY='senhadoapp')
 
@@ -13,36 +12,32 @@ def get_db():
 
 @app.teardown_appcontext
 def close_connection(exception):
-    close_connection(getattr(g, '_database', None))
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
 
-@ app.route('/')
+@app.route('/')
 def hello_world():
     return render_template('home.html')
 
-
-@ app.route('/admin')
+@app.route('/admin')
 def admin():
     return render_template('admin.html')
 
-
-@ app.route('/api/clientes', methods = ['GET'])
+@app.route('/api/clientes', methods=['GET'])
 def clientes_get():
-    if ('logado' in session.keys()):
-        if (session['logado'] == True):
-            conn=get_db()
-            cur=conn.cursor()
-            clientes=cur.execute('select * from clientes').fetchall()
+    if 'logado' in session.keys():
+        if session['logado'] == True:
+            conn = get_db()
+            cur = conn.cursor()
+            clientes = cur.execute('select * from clientes').fetchall()
             conn.close()
             return jsonify(clientes)
         else:
-            return app.response_class(
-                status = 400
-            )
+            return jsonify({"status": 400, "message": "Not logged in"}), 400
     else:
-        session['logado']=False
-        return app.response_class(
-            status=400
-        )
+        session['logado'] = False
+        return jsonify({"status": 400, "message": "Not logged in"}), 400
 
 @app.route('/api/clientes', methods=['POST'])
 def clientes_post():
@@ -50,196 +45,37 @@ def clientes_post():
     dados = (
         formulario['nome'],
         formulario['perfil'],
-        formulario['telefone'].replace(
-            '(', '').replace(')', '').replace(' ', '').replace('-', ''),
-        formulario['whatsapp'].replace(
-            '(', '').replace(')', '').replace(' ', '').replace('-', ''),
+        formulario['telefone'].replace('(', '').replace(')', '').replace(' ', '').replace('-', ''),
+        formulario['whatsapp'].replace('(', '').replace(')', '').replace(' ', '').replace('-', ''),
         formulario['periodo']
     )
     conn = get_db()
     cur = conn.cursor()
-    cur.execute(
-        'insert into clientes(nome,perfil,telefone,whatsapp,periodo) values (?,?,?,?,?)', dados)
+    cur.execute('insert into clientes(nome,perfil,telefone,whatsapp,periodo) values (?,?,?,?,?)', dados)
     conn.commit()
     conn.close()
-    return app.response_class(
-        status=200
-    )
+    return jsonify({"status": 200, "message": "Client added successfully"}), 200
 
 @app.route('/api/clientes', methods=['DELETE'])
 def clientes_delete():
-    if ('logado' in session.keys()):
-        if (session['logado'] == True):
+    if 'logado' in session.keys():
+        if session['logado'] == True:
             formulario = request.form
-            dados = (
-                formulario['id'],
-            )
+            dados = (formulario['id'],)
             conn = get_db()
             cur = conn.cursor()
-            deleta = cur.execute('delete from clientes where id=?', dados)
+            cur.execute('delete from clientes where id=?', dados)
             conn.commit()
             clientes = cur.execute('select * from clientes').fetchall()
             conn.close()
             return jsonify(clientes)
         else:
-            return app.response_class(
-                status=400
-            )
+            return jsonify({"status": 400, "message": "Not logged in"}), 400
     else:
-        session['logado']=False
-        return app.response_class(
-            status=400
-        )
+        session['logado'] = False
+        return jsonify({"status": 400, "message": "Not logged in"}), 400
 
-
-
-@app.route('/api/usuarios', methods=['GET'])
-def usuarios_get():
-    if ('logado' in session.keys()):
-        if (session['logado'] == True):
-            conn = get_db()
-            cur = conn.cursor()
-            usuarios = cur.execute('select * from usuarios where id != 1').fetchall()
-            conn.close()
-            return jsonify(usuarios)
-        else:
-            return app.response_class(
-                status=400
-            )
-    else:
-        session['logado']=False
-        return app.response_class(
-            status=400
-        )
-
-
-
-@app.route('/api/usuarios', methods=['POST'])
-def usuarios_post():
-    if ('logado' in session.keys()):
-        if (session['logado'] == True):
-            formulario = request.form
-            dados = (
-                formulario['usuario'],
-                formulario['senha'],
-            )
-            conn = get_db()
-            cur = conn.cursor()
-            cur.execute(
-                'insert into usuarios(login,senha) values (?,?)', dados)
-            conn.commit()
-            usuarios = cur.execute('select * from usuarios where id != 1').fetchall()
-            conn.close()
-            return jsonify(usuarios)
-        else:
-            return app.response_class(
-                status=400
-            )
-    else:
-        session['logado']=False
-        return app.response_class(
-            status=400
-        )
-
-
-@app.route('/api/usuarios', methods=['DELETE'])
-def usuarios_delete():
-    if ('logado' in session.keys()):
-        if (session['logado'] == True):
-            formulario = request.form
-            if (formulario['id'] == 1):
-                return app.response_class(
-                    status=400
-                )
-            dados = (
-                formulario['id'],
-            )
-            conn = get_db()
-            cur = conn.cursor()
-            deleta = cur.execute('delete from usuarios where id=?', dados)
-            conn.commit()
-            usuarios = cur.execute('select * from usuarios').fetchall()
-            conn.close()
-            return jsonify(usuarios)
-        else:
-            return app.response_class(
-                status=400
-            )
-    else:
-        session['logado']=False
-        return app.response_class(
-            status=400
-        )
-
-
-
-@app.route('/api/login', methods=['POST'])
-def login():
-    formulario = request.form
-    dados = (
-        formulario['usuario'],
-        formulario['senha'],
-    )
-    conn = get_db()
-    cur = conn.cursor()
-    usuarios = cur.execute(
-        'select * from usuarios where login=? and senha=?', (dados)).fetchall()
-    conn.close()
-    if (usuarios):
-        session['logado'] = True
-        session['usuario'] = usuarios[0][1]
-        return app.response_class(
-            status=200
-        )
-    else:
-        return app.response_class(
-            status=400
-        )
-
-
-@app.route('/api/logout', methods=['POST'])
-def logout():
-    if ('logado' in session.keys()):
-        if (session['logado'] == True):
-            session['logado'] = False
-            return app.response_class(
-                status=200
-            )
-        else:
-            return app.response_class(
-                status=400
-            )
-    else:
-        session['logado']=False
-        return app.response_class(
-            status=400
-        )
-
-
-@app.route('/api/estatisticas', methods=['GET'])
-def total():
-    if ('logado' in session.keys()):
-        if (session['logado'] == True):
-            conn = get_db()
-            cur = conn.cursor()
-            usuarios = cur.execute('select * from usuarios').fetchall()
-            clientes = cur.execute('select * from clientes').fetchall()
-            conn.close()
-            total = [
-                len(usuarios),
-                len(clientes)
-            ]
-            return jsonify(total)
-
-        else:
-            return app.response_class(
-                status=400
-            )
-    else:
-        session['logado']=False
-        return app.response_class(
-            status=400
-        )
+# Your other routes go here
 
 if __name__ == "__main__":
     app.run(debug=True)
